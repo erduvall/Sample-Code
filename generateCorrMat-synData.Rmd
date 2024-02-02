@@ -1,0 +1,101 @@
+---
+title: "synDataGenerator"
+author: "Eliza Duvall"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+```{r, include = FALSE}
+library("corrplot")
+library("igraph")
+```
+
+Functions to generate synthetic data - in my case, the synthetic data is a correlation matrix.  
+
+## Function
+
+Parameters in the function:  
+
+- Lmin/Lmax = are the LOWEST correlation thresholds at a minimum and maximum (default is Lmin = 0.05 and Lmax = 0.3) 
+- Mmin/Mmax = are the MID correlation thresholds at a minimum and maximum (default is Mmin = 0.4 and Mmax = 0.7) 
+- Hmin/Hmax = are the HIGHEST correlation thresholds at a minimum and maximum (default is Hmin = 0.8 and Lmax = 0.99) 
+- nodes = the number of nodes to include
+- Lfraction = the fraction of the nodes that should fall in the LOWEST correlation category
+- Mfraction = the fraction of the nodes that should fall in the MID correlation category
+- Hfraction = the fraction of the nodes that should fall in the HIGHEST correlation category  
+
+**NOTE:** The fractions should sum to 1
+
+```{r}
+synDataGenerator <- function(Lmin = 0.05, Lmax = 0.3,
+                             Mmin = 0.4, Mmax = 0.7,
+                             Hmin = 0.8, Hmax = 0.99,
+                             nodes, Lfraction = 0.5, 
+                             Mfraction = 0, Hfraction = 0.5){
+  numVals = ((nodes*nodes)-nodes)/2 # the number of edges/correlation values that need to be calculated
+  
+  vector <- runif(numVals*Lfraction, Lmin, Lmax) # randomly choose values for lower
+  vector <- append(vector, runif(numVals*Mfraction, Mmin, Mmax)) # for mid
+  vector <- append(vector, runif(numVals*Hfraction, Hmin, Hmax)) # for high 
+  
+  mat <- matrix(0, nodes, nodes) # put together in a matrix
+  mat[lower.tri(mat, diag=FALSE)] <- vector
+  mat[upper.tri(mat, diag=FALSE)] <- vector
+  
+  return(mat)
+}
+```
+
+
+## Test function default
+
+Test this function
+
+```{r, warning=FALSE}
+defaultMatrix <- synDataGenerator(nodes = 10)
+defaultMatrix
+```
+
+And let's look at this correlation where color represents correlation strength
+
+```{r}
+corrplot(defaultMatrix, method = "number")
+```
+
+Generate a correlation matrix where there are blocks of highly correlation nodes
+
+```{r}
+m <- synDataGenerator(node = 22, Lfraction = 1, Hfraction = 0)
+matH1 <- synDataGenerator(nodes = 10, Lfraction = 0, Hfraction = 1)
+matH2 <- synDataGenerator(nodes = 5, Lfraction = 0, Hfraction = 1)
+matH3 <- synDataGenerator(nodes = 7, Lfraction = 0, Hfraction = 1)
+
+m[1:10, 1:10] <- matH1
+m[11:15, 11:15] <- matH2
+m[16:22, 16:22] <- matH3
+```
+
+## Generate highly correlated blocks
+
+Let's look at the correlation matrix in a nice plot, and we will see blocks of highly correlated notes
+
+```{r}
+corrplot(m, method = "number")
+```
+
+The purpose of creating this synthetic correlation is for network analysis. Let's use this correlation matrix as an adjacency matrix and see what the complete network looks like. **Note,** a complete network is one in which all nodes are connected to all nodes.  
+
+```{r, warning=FALSE}
+g2 <- graph_from_adjacency_matrix(m, mode = "undirected", weighted = TRUE)
+E(g2)$width <- E(g2)$weight*3
+plot(g2)
+```
+
+And here we see the three neighborhoods/blocks of highly correlated values :) 
+
+
+
