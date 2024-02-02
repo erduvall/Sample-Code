@@ -5,4 +5,6 @@ In this repository are a few examples of how I like to structure my code and vis
 - generateCorrMat is an example of a function I wrote and use to generate a correlation matrix, which is used as an adjacency matrix for downstream network analysis. 
 - PCAxenopusLineages markdown file was created myself for the purposes of sharing with experimental scientists at Northwestern.
 
+**To view HTML files** you may have to download, then open in a web browser. 
+
 Please note, my thesis work is more sophisticated and structured on github as a downloadable package. However, this work has not been submitted for publication (yet!), and therefore that code exists in a private repository. 
